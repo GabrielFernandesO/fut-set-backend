@@ -106,7 +106,7 @@ const dbUser = process.env.DB_USER
 const dbPass = process.env.DB_PASS
 
 mongoose.connect(`mongodb+srv://${dbUser}:${dbPass}@fut-set.hcuphse.mongodb.net/?retryWrites=true&w=majority`).then(() =>{
-    app.listen(3000)
+    app.listen(process.env.PORT)
     console.log('You are connected in database!')
 }).catch((err) => console.log(err))
 
