@@ -3,6 +3,7 @@ const database = require('./database');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const validator = require('validator');
+const bcrypt = require('bcrypt');
 const app = express();
 
 //Coloca cors na api
@@ -14,33 +15,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 
-
-
-/* const user = [
-    {
-        name: "Cristopher Schuffner",
-        nickname : 'Crisz20',
-        email: "cris2000@hotmail.com",
-        password: "123",
-        club: "Frankfurt",
-        age: '37',
-        gender: 'Male',
-        country: "German",
-        photo: ''
-
-    }
-]
-
-
-database.insert(user).into('users').then(data =>{
-    console.log(data)
-}).catch(err =>{
-    console.log(err);
-})
- */
-
-
-   
+//CRIAR ESQUECI O NOME, O ROUTES PARA SEPARAR ROTAS E N FICAR UMA BAGUNÇA NO INDEX.JS
 
     
 /* 
@@ -98,19 +73,83 @@ app.post("/user", (req, res) =>{
   database.select(['email', 'nickname']).whereRaw(`email = '${email}'  OR nickname = '${nickname}'`).table("users").then(data =>{
     console.log(data)
     if(data.length > 0){
-        res.send({erro: 'Usuário já cadastrado'})
+        if(email == data[0].email){
+            res.status(409).json({error: "Email already in use"});
+        }else{
+            res.status(409).json({error: "Nickname already in use"});
+        }
+        
     }else{
-        res.send({erro: "Usuário Livre"})
-        //FAzer hash da senha aqui dps com bcrypt
+        
+        const saltRounds = 10;
+
+        bcrypt.hash(password, saltRounds, function(err, hashPass) {
+            if(err){
+                console.error("Erro ao Gerar Hash", err)
+            }else{
+
+                const user = {
+                    name: name,
+                    nickname: nickname,
+                    email: email,
+                    password: hashPass,
+                    club: club,
+                    age: age,
+                    gender : gender,
+                    country : country,
+                    photo: photo,
+                }
+
+                database.insert(user).into('users').then(data =>{
+                    console.log(data, 'Data Created');
+                    database.select(['id','name', 'nickname', 'email', 'club', 'age', 'gender', 'country', 'photo']).where({email: user.email}).table("users").then(data =>{
+                        res.status(201).json({msg: 'User created', data});
+                    }).catch(err =>{
+                        console.log(err);
+                    })
+                    
+                }).catch(err =>{
+                    console.log(err);
+                })
+                
+
+            }
+        })
     }
   }).catch(err =>{
     console.log(err)
   })
-
-
-
-
 })
+
+//LOGIN
+app.post("/login", (req, res)=>{
+    const {email, password} = req.body;
+
+    
+    if (email != undefined){
+        database.select(['email', 'password']).where({email: email}).table("users").then(data =>{
+            bcrypt.compare(password, data[0].password, function(err, result) {
+                if(err){
+                    res.status(400).json({error: "Something goings wrong"});
+                } else{
+                    if(result){
+                        //Fazer JWT
+                        res.status(200).json({msg: "User logged!", token: "token ou cookie"});
+                    }else{
+                        res.status(401).json({error: "Wrong password"});
+                    }
+                }
+            })
+        }).catch(error =>{
+            console.log(error)
+            res.status(404).json({error: "Email not found"});
+        })
+       
+    }else{
+        res.status(400).json({error: "Email invalid"});
+    }
+})
+
 
 app.listen(3000, () =>{
     console.log("BACK RODANDO")
