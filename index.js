@@ -177,7 +177,7 @@ app.post("/login", (req, res) => {
                     if (result) {
 
                         //Geração de token
-                        jwt.sign({ id: data[0].id, email: data[0].email }, JWTScret, { expiresIn: '1h' }, (err, token) => {
+                        jwt.sign({ id: data[0].id, email: data[0].email }, JWTScret, { expiresIn: '2d' }, (err, token) => {
                             if (err) {
                                 res.status(400);
                                 res.json({ erro: "Falha Interna" })
@@ -202,6 +202,6 @@ app.post("/login", (req, res) => {
 })
 
 
-app.listen(3000, () => {
+app.listen(4000, () => {
     console.log("BACK RODANDO")
 })
