@@ -10,7 +10,7 @@ const app = express();
 
 
 //****** SEPARAR EM ARQUIVOS PARA SER USADO AQUI, ROUTES, VER NOME E COMO FAZ DEPOIS. */
-
+//SEPERAR
 //Coloca cors na api
 app.use(cors());
 
